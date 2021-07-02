@@ -1,0 +1,45 @@
+Create a polling service that accepts questions and aggregates interest in specific topics
+
+Accept questions (100% anonymous)
+POST /question/{guid}
+Accept interest to questions that were already asked
+POST /question/{guid}/interest
+Show list of most popular questions
+GET /question
+Start question poll
+POST /poll/{guid}
+End question poll
+POST /poll/{guid}/end
+Combine duplicate questions? (not mvp)
+
+
+poll
+{
+  id: guid,
+  altId: guid,
+  code: string,
+  status: string,
+  link: string,
+  name: string
+}
+
+question
+{
+  id: guid,
+  altId: guid,
+  text: string
+}
+
+interest
+{
+  id: guid,
+  user: guid,
+  question: guid
+}
+
+users
+{
+  id: guid,
+  altId: guid,
+  name: string
+}
