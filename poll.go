@@ -4,28 +4,40 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
 
 type Poll struct {
-	Id     string `bson:"id"`
-	AltId  string `bson:"altId"`
-	Code   string `bson:"code"`
-	Status string `bson:"status"`
-	Link   string `bson:"link"`
-	Name   string `bson:"name"`
+	Id     string `json: "id" bson:"_id", "omitempty"`
+	AltId  string `json: "altId" bson:"altId"`
+	Code   string `json: "code" bson:"code", "omitempty"`
+	Status string `json: "status" bson:"status", "omitempty"`
+	Link   string `json:"link" bson:"link", "omitempty"`
+	Name   string `json: "name" bson:"name"`
 }
 
 var collection = "test"
 
-func CreatePoll(w http.ResponseWriter, r *http.Request) {
-
-	fmt.Println("create poll hit")
-	collection := GetCollection(collection)
-	res, err := collection.InsertOne(context.Background(), Poll{"42", "43", "44", "pending", "dot com", "yolo"})
+func toPoll(jsonString string) Poll {
+	var poll Poll
+	err := json.Unmarshal([]byte(jsonString), &poll)
 	if err != nil {
-		fmt.Println("error occurred while creating poll", err)
+		log.Fatalln(err)
+	}
+	return poll
+}
+
+func CreatePoll(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
+	poll := toPoll(string(body))
+	poll.Status = "active"
+	collection := GetCollection(collection)
+
+	res, err := collection.InsertOne(context.Background(), poll)
+	if err != nil {
+		log.Fatalln("error occurred while creating poll", err)
 	}
 
 	b, _ := json.Marshal(res.InsertedID)
