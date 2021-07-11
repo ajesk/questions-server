@@ -1,22 +1,30 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
 
 type Poll struct {
-	Id     string `json:"id"`
-	AltId  string `json:"altId"`
-	Code   string `json:"code"`
-	Status string `json:"status"`
-	Link   string `json:"link"`
-	Name   string `json:"name"`
+	Id     string `bson:"id"`
+	AltId  string `bson:"altId"`
+	Code   string `bson:"code"`
+	Status string `bson:"status"`
+	Link   string `bson:"link"`
+	Name   string `bson:"name"`
 }
 
 func createPoll(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("create poll hit")
+	collection := GetCollection("test")
+	res, err := collection.InsertOne(context.Background(), Poll{"42", "43", "44", "pending", "dot com", "yolo"})
+	if err != nil {
+		fmt.Println("fam plz", err)
+	}
+
+	fmt.Println("did the thing", res)
 }
 
 func endPoll(w http.ResponseWriter, r *http.Request) {

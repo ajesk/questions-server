@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 type Health struct {
@@ -17,6 +18,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRequests() {
+	os.Setenv("MONGODB_URI", "mongodb://localhost:27017")
 	fmt.Println("beginning server thing")
 	http.HandleFunc("/ruok", healthCheck)
 	http.HandleFunc("/poll", PollHandler)
@@ -24,6 +26,5 @@ func handleRequests() {
 }
 
 func main() {
-	fmt.Println("starting up server")
 	handleRequests()
 }
