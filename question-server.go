@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
 )
 
 type Health struct {
@@ -20,9 +22,14 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	os.Setenv("MONGODB_URI", "mongodb://localhost:27017")
 	fmt.Println("beginning server thing")
-	http.HandleFunc("/ruok", healthCheck)
-	http.HandleFunc("/poll", PollHandler)
-	log.Fatal(http.ListenAndServe(":10000", nil))
+	router := mux.NewRouter().StrictSlash(true)
+
+	router.HandleFunc("/ruok", healthCheck)
+
+	router.HandleFunc("/poll", CreatePoll).Methods("POST")
+	router.HandleFunc("/poll", GetPoll).Methods("GET")
+	router.HandleFunc("/poll", CreatePoll).Methods("DELETE")
+	log.Fatal(http.ListenAndServe(":10000", router))
 }
 
 func main() {

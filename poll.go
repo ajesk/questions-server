@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -15,34 +17,27 @@ type Poll struct {
 	Name   string `bson:"name"`
 }
 
-func createPoll(w http.ResponseWriter, r *http.Request) {
+var collection = "test"
+
+func CreatePoll(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("create poll hit")
-	collection := GetCollection("test")
+	collection := GetCollection(collection)
 	res, err := collection.InsertOne(context.Background(), Poll{"42", "43", "44", "pending", "dot com", "yolo"})
 	if err != nil {
-		fmt.Println("fam plz", err)
+		fmt.Println("error occurred while creating poll", err)
 	}
 
-	fmt.Println("did the thing", res)
+	b, _ := json.Marshal(res.InsertedID)
+	fmt.Fprintf(w, string(b))
 }
 
-func endPoll(w http.ResponseWriter, r *http.Request) {
+func EndPoll(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("end poll hit")
 }
 
-func getPoll(w http.ResponseWriter, r *http.Request) {
+func GetPoll(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("get poll hit")
-}
-
-func PollHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		getPoll(w, r)
-	case "POST":
-		createPoll(w, r)
-	case "DELETE":
-		endPoll(w, r)
-	}
+	log.Print(r)
 }
