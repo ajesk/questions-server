@@ -27,7 +27,7 @@ func handleRequests() {
 	router.HandleFunc("/ruok", healthCheck)
 
 	router.HandleFunc("/poll", CreatePoll).Methods("POST")
-	router.HandleFunc("/poll", GetPoll).Methods("GET")
+	router.HandleFunc("/poll/{id}", GetPoll).Methods("GET")
 	router.HandleFunc("/poll", CreatePoll).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":10000", router))
 }

@@ -7,10 +7,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Poll struct {
-	Id     string `json: "id" bson:"_id", "omitempty"`
+	_id    string `json: "_id" bson:"_id", "omitempty"`
 	AltId  string `json: "altId" bson:"altId"`
 	Code   string `json: "code" bson:"code", "omitempty"`
 	Status string `json: "status" bson:"status", "omitempty"`
@@ -51,5 +55,17 @@ func EndPoll(w http.ResponseWriter, r *http.Request) {
 
 func GetPoll(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("get poll hit")
-	log.Print(r)
+	id, _ := primitive.ObjectIDFromHex(mux.Vars(r)["id"])
+
+	var poll Poll
+	err := GetCollection(collection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(id)
+	result, err := json.Marshal(poll)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Fprintf(w, string(result))
 }
