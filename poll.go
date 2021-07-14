@@ -22,7 +22,7 @@ type Poll struct {
 	Name   string `json: "name" bson:"name"`
 }
 
-var collection = "test"
+var collection = "poll"
 
 func toPoll(jsonString string) Poll {
 	var poll Poll
@@ -55,14 +55,13 @@ func EndPoll(w http.ResponseWriter, r *http.Request) {
 
 func GetPoll(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("get poll hit")
-	id, _ := primitive.ObjectIDFromHex(mux.Vars(r)["id"])
 
+	id, _ := primitive.ObjectIDFromHex(mux.Vars(r)["id"])
 	var poll Poll
 	err := GetCollection(collection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	log.Println(id)
 	result, err := json.Marshal(poll)
 	if err != nil {
 		log.Fatalln(err)
