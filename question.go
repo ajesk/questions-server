@@ -7,6 +7,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Question struct {
@@ -14,8 +17,7 @@ type Question struct {
 	AltId  string `json: "altId" bson:"altId"`
 	Poll   string `json: "pollId" bson:"pollId"`
 	Status string `json: "status" bson:"status", "omitempty"`
-	Link   string `json:"link" bson:"link", "omitempty"`
-	Name   string `json: "name" bson:"name"`
+	Text   string `json: "text" bson:"text", "omitempty"`
 }
 
 var collectionName = "question"
@@ -32,9 +34,15 @@ func toQuestion(jsonString string) Question {
 func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	question := toQuestion(string(body))
-	collection := GetCollection(collectionName)
+	id, _ := primitive.ObjectIDFromHex(mux.Vars(r)["id"])
 
-	res, err := collection.InsertOne(context.Background(), question)
+	pollExists := PollExists(w, id)
+	if !pollExists {
+		log.Println("poll does not exist aborting")
+		return
+	}
+
+	res, err := GetCollection(collectionName).InsertOne(context.Background(), question)
 	if err != nil {
 		log.Fatalln("error occurred while creating question", err)
 	}

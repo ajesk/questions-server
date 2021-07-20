@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Poll struct {
@@ -60,11 +61,31 @@ func GetPoll(w http.ResponseWriter, r *http.Request) {
 	var poll Poll
 	err := GetCollection(collection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
 	if err != nil {
-		log.Fatalln(err)
+		w.WriteHeader(http.StatusNotFound)
+		response := ErrorResponse{err.Error()}
+		errorRet, _ := json.Marshal(response)
+		fmt.Fprintf(w, string(errorRet))
+		return
 	}
 	result, err := json.Marshal(poll)
 	if err != nil {
-		log.Fatalln(err)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, err)
 	}
 	fmt.Fprintf(w, string(result))
+}
+
+func PollExists(w http.ResponseWriter, id primitive.ObjectID) bool {
+	var poll Poll
+	err := GetCollection(collection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			w.WriteHeader(http.StatusNotFound)
+			response := ErrorResponse{err.Error()}
+			errorRet, _ := json.Marshal(response)
+			fmt.Fprintf(w, string(errorRet))
+			return false
+		}
+	}
+	return true
 }
