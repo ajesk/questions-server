@@ -13,11 +13,11 @@ import (
 )
 
 type Question struct {
-	_id    string `json: "_id" bson:"_id", "omitempty"`
-	AltId  string `json: "altId" bson:"altId"`
-	Poll   string `json: "pollId" bson:"pollId"`
-	Status string `json: "status" bson:"status", "omitempty"`
-	Text   string `json: "text" bson:"text", "omitempty"`
+	_id    string             `json: "_id" bson:"_id", "omitempty"`
+	AltId  string             `json: "altId" bson:"altId"`
+	Poll   primitive.ObjectID `json: "pollId" bson:"pollId"`
+	Status string             `json: "status" bson:"status", "omitempty"`
+	Text   string             `json: "text" bson:"text", "omitempty"`
 }
 
 var collectionName = "question"
@@ -33,14 +33,18 @@ func toQuestion(jsonString string) Question {
 
 func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
-	question := toQuestion(string(body))
-	id, _ := primitive.ObjectIDFromHex(mux.Vars(r)["id"])
+	id, _ := primitive.ObjectIDFromHex(mux.Vars(r)["pollId"])
 
+	log.Println(id)
 	pollExists := PollExists(w, id)
 	if !pollExists {
 		log.Println("poll does not exist aborting")
 		return
 	}
+
+	question := toQuestion(string(body))
+	question.Status = "open"
+	question.Poll = id
 
 	res, err := GetCollection(collectionName).InsertOne(context.Background(), question)
 	if err != nil {

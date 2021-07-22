@@ -77,6 +77,8 @@ func GetPoll(w http.ResponseWriter, r *http.Request) {
 
 func PollExists(w http.ResponseWriter, id primitive.ObjectID) bool {
 	var poll Poll
+
+	log.Println("checking if poll exists with id " + id.String())
 	err := GetCollection(collection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
