@@ -30,7 +30,8 @@ func handleRequests() {
 	router.HandleFunc("/poll", CreatePoll).Methods("DELETE")
 	router.HandleFunc("/poll/{id}", GetPoll).Methods("GET")
 	router.HandleFunc("/poll/{pollId}/question", CreateQuestion).Methods("POST")
-	router.HandleFunc("/poll/{pollId}/question/{questionId}", CreateQuestion).Methods("PUT")
+	router.HandleFunc("/poll/{pollId}/question/{questionId}", CreateInterest).Methods("PUT")
+
 	log.Fatal(http.ListenAndServe(":10000", router))
 }
 

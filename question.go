@@ -20,7 +20,7 @@ type Question struct {
 	Text   string             `json: "text" bson:"text", "omitempty"`
 }
 
-var collectionName = "question"
+var questionCollection = "question"
 
 func toQuestion(jsonString string) Question {
 	var question Question
@@ -46,15 +46,11 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	question.Status = "open"
 	question.Poll = id
 
-	res, err := GetCollection(collectionName).InsertOne(context.Background(), question)
+	res, err := GetCollection(questionCollection).InsertOne(context.Background(), question)
 	if err != nil {
 		log.Fatalln("error occurred while creating question", err)
 	}
 
 	b, _ := json.Marshal(res.InsertedID)
 	fmt.Fprintf(w, string(b))
-}
-
-func InterestQuestion(w http.ResponseWriter, r *http.Request) {
-	log.Println("interest question hit")
 }
