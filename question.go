@@ -9,7 +9,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Question struct {
@@ -53,4 +55,21 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 
 	b, _ := json.Marshal(res.InsertedID)
 	fmt.Fprintf(w, string(b))
+}
+
+func QuestionExists(w http.ResponseWriter, id primitive.ObjectID) bool {
+	var poll Poll
+
+	log.Println("checking if question exists with id " + id.String())
+	err := GetCollection(questionCollection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			w.WriteHeader(http.StatusNotFound)
+			response := ErrorResponse{err.Error()}
+			errorRet, _ := json.Marshal(response)
+			fmt.Fprintf(w, string(errorRet))
+			return false
+		}
+	}
+	return true
 }

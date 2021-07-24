@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -14,35 +15,48 @@ import (
 type Interest struct {
 	_id      string             `json: "_id" bson:"_id", "omitempty"`
 	AltId    string             `json: "altId" bson:"altId"`
-	Question primitive.ObjectID `json: "pollId" bson:"pollId"`
+	Question primitive.ObjectID `json: "pollId" bson:"pollId", "omitempty"`
 }
 
-var collectionName = "interest"
+var interestCollection = "interest"
+
+func toInterest(jsonString []byte) (Interest, Error) {
+	var interest Interest
+	err := json.Unmarshal(jsonString, &interest)
+	if err != nil {
+		return nil, err
+	}
+	return interest, nil
+}
 
 func CreateInterest(w http.ResponseWriter, r *http.Request) {
-	//body, _ := ioutil.ReadAll(r.Body)
-
 	pollId, _ := primitive.ObjectIDFromHex(mux.Vars(r)["pollId"])
 	questionId, _ := primitive.ObjectIDFromHex(mux.Vars(r)["questionId"])
-	altId, _ := mux.Vars(r)["altId"]
 
-	// poll exists
 	pollExists := PollExists(w, pollId)
 	if !pollExists {
 		log.Println("poll does not exist aborting")
 		return
 	}
-	// question exists
 
-	fmt.Fprintf(w, insertInterest(questionId, altId))
+	questionExists := QuestionExists(w, questionId)
+	if !questionExists {
+		log.Println("questions does not exist aborting")
+		return
+	}
+	body, _ := ioutil.ReadAll(r.Body)
+	interest, err := toInterest(body)
+	if err != nil {
+		log.Println("error caught while parsing json body aborting", err)
+		return
+	}
+	interest.Question = questionId
+	fmt.Fprintf(w, insertInterest(interest))
 }
 
-func insertInterest(questionId primitive.ObjectID, altId string) string {
-	interest := Interest{}
-	interest.AltId = altId
-	interest.Question = questionId
+func insertInterest(interest Interest) string {
 
-	res, err := GetCollection(collectionName).InsertOne(context.Background(), interest)
+	res, err := GetCollection(interestCollection).InsertOne(context.Background(), interest)
 	if err != nil {
 		log.Fatalln("error occurred while creating interest", err)
 	}
