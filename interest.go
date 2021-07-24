@@ -20,11 +20,11 @@ type Interest struct {
 
 var interestCollection = "interest"
 
-func toInterest(jsonString []byte) (Interest, Error) {
+func toInterest(jsonString []byte) (Interest, error) {
 	var interest Interest
 	err := json.Unmarshal(jsonString, &interest)
 	if err != nil {
-		return nil, err
+		return Interest{}, err
 	}
 	return interest, nil
 }

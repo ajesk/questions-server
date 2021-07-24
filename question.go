@@ -64,10 +64,7 @@ func QuestionExists(w http.ResponseWriter, id primitive.ObjectID) bool {
 	err := GetCollection(questionCollection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			w.WriteHeader(http.StatusNotFound)
-			response := ErrorResponse{err.Error()}
-			errorRet, _ := json.Marshal(response)
-			fmt.Fprintf(w, string(errorRet))
+			NotFoundResponse(w, err, "error inserting document")
 			return false
 		}
 	}

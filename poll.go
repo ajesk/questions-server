@@ -25,24 +25,29 @@ type Poll struct {
 
 var collection = "poll"
 
-func toPoll(jsonString string) Poll {
+func toPoll(jsonString []byte) (Poll, error) {
 	var poll Poll
-	err := json.Unmarshal([]byte(jsonString), &poll)
+	err := json.Unmarshal(jsonString, &poll)
 	if err != nil {
-		log.Fatalln(err)
+		return Poll{}, err
 	}
-	return poll
+	return poll, nil
 }
 
 func CreatePoll(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
-	poll := toPoll(string(body))
+	poll, err := toPoll(body)
+	if err != nil {
+		log.Println("error parsing body", err)
+		return
+	}
 	poll.Status = "active"
 	collection := GetCollection(collection)
 
 	res, err := collection.InsertOne(context.Background(), poll)
 	if err != nil {
-		log.Fatalln("error occurred while creating poll", err)
+		log.Println("error occurred while creating poll", err)
+		return
 	}
 
 	b, _ := json.Marshal(res.InsertedID)
@@ -61,10 +66,7 @@ func GetPoll(w http.ResponseWriter, r *http.Request) {
 	var poll Poll
 	err := GetCollection(collection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		response := ErrorResponse{err.Error()}
-		errorRet, _ := json.Marshal(response)
-		fmt.Fprintf(w, string(errorRet))
+		NotFoundResponse(w, err, "poll not found")
 		return
 	}
 	result, err := json.Marshal(poll)
@@ -82,10 +84,7 @@ func PollExists(w http.ResponseWriter, id primitive.ObjectID) bool {
 	err := GetCollection(collection).FindOne(context.Background(), bson.M{"_id": id}).Decode(&poll)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			w.WriteHeader(http.StatusNotFound)
-			response := ErrorResponse{err.Error()}
-			errorRet, _ := json.Marshal(response)
-			fmt.Fprintf(w, string(errorRet))
+			NotFoundResponse(w, err, "poll not found")
 			return false
 		}
 	}
