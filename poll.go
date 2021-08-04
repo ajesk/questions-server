@@ -38,6 +38,7 @@ func CreatePoll(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	poll, err := toPoll(body)
 	if err != nil {
+		BadRequestResponse(w, err, "unable to parse json body")
 		log.Println("error parsing body", err)
 		return
 	}
@@ -47,6 +48,7 @@ func CreatePoll(w http.ResponseWriter, r *http.Request) {
 	res, err := collection.InsertOne(context.Background(), poll)
 	if err != nil {
 		log.Println("error occurred while creating poll", err)
+		BadRequestResponse(w, err, "error occurred while writing poll to db")
 		return
 	}
 
@@ -71,8 +73,8 @@ func GetPoll(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := json.Marshal(poll)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, err)
+		BadRequestResponse(w, err, "error while converting json to string")
+		return
 	}
 	fmt.Fprintf(w, string(result))
 }

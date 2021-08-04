@@ -37,7 +37,6 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	id, _ := primitive.ObjectIDFromHex(mux.Vars(r)["pollId"])
 
-	log.Println(id)
 	pollExists := PollExists(w, id)
 	if !pollExists {
 		log.Println("poll does not exist aborting")
@@ -50,7 +49,8 @@ func CreateQuestion(w http.ResponseWriter, r *http.Request) {
 
 	res, err := GetCollection(questionCollection).InsertOne(context.Background(), question)
 	if err != nil {
-		log.Fatalln("error occurred while creating question", err)
+		BadRequestResponse(w, err, "unable to insert question")
+		log.Println("error occurred while creating question", err)
 	}
 
 	b, _ := json.Marshal(res.InsertedID)
